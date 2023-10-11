@@ -7,95 +7,167 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { request } from "../requests";
+import { postAuthRequest } from "../requests";
 import Alert from "@mui/material/Alert";
 import { Cookies, withCookies } from "react-cookie";
 
 import { API_URL } from "../constants";
+import { Operation } from "../types";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Chip from "@mui/material/Chip";
+import OperationItem from "./OperatorItem";
 
-const LoginForm = ({ cookies }: { cookies: Cookies }) => {
+const OperationForm = ({
+  cookies,
+  operations,
+}: {
+  cookies: Cookies;
+  operations: Array<Operation>;
+}) => {
   const [error, setError] = useState({ isError: false, message: "" });
+  const [selectedOperation, setSelectedOperation] = useState(operations[0]);
+  const [operationItems, setOperationItems] = useState([
+    <OperationItem key="key" />,
+  ]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    const data = new FormData(event.currentTarget);
     event.preventDefault();
-    setError({ isError: false, message: "" });
 
-    const response = await request(`${API_URL}/v1/auth`, "POST", {
-      username: data.get("username"),
-      password: data.get("password"),
-    });
+    const operators: any = {};
+    const data = new FormData(event.currentTarget);
 
-    if (response.status > 299) {
-      setError({ isError: true, message: "Invalid credentials. Try again." });
-    } else {
-      const token = await response.text();
-      cookies.set("auth_token", token);
+    data.forEach((v, k) => (operators[k] = v));
 
-      window.location.href = "/record";
+    const response = await postAuthRequest(
+      `${API_URL}/v1/operation/${selectedOperation.id}`,
+      cookies.get("auth_token"),
+      operators
+    );
+
+    console.log(response);
+    console.log(await response.json());
+  };
+
+  const handleOperationChange = (event: SelectChangeEvent<number>) => {
+    const operationId = event.target.value;
+    const operation = operations.filter(
+      (operation) => operation.id === operationId
+    )[0];
+
+    if (operation) {
+      setSelectedOperation(operation);
     }
+  };
+
+  const addOperationItem = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+
+    setOperationItems((state) => [
+      ...state,
+      <OperationItem key={`state-${state.length + 1}`} />,
+    ]);
+
+    console.log("add");
+  };
+
+  const removeOperationItem = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+
+    setOperationItems((state) => [...state.slice(0, -1)]);
+
+    console.log("remove");
   };
 
   return (
     <Box
       sx={{
         width: "100dvw",
-        height: "100dvh",
+        height: "100%",
         justifyContent: "center",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        marginTop: "50px",
       }}
     >
-      <Box>
+      <Box width="400px">
         <Typography component="h1" variant="h5">
-          Sign in
+          New Operation
         </Typography>
         <Box sx={{ mt: 2 }}>
           {error.isError && <Alert severity="error">{error.message}</Alert>}
         </Box>
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          <TextField
-            error={error.isError}
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Email Address"
-            name="username"
-            autoComplete="email"
-            autoFocus
-          />
-          <TextField
-            error={error.isError}
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
+          <Grid container>
+            <Grid item xs={6}>
+              <Select
+                labelId="demo-simple-select-label"
+                value={selectedOperation.id}
+                id="demo-simple-select"
+                label="Age"
+                onChange={handleOperationChange}
+                sx={{ width: "100%" }}
+              >
+                {operations.map((operation) => (
+                  <MenuItem value={operation.id} key={operation.id}>
+                    {operation.type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid
+              item
+              xs={6}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Chip
+                label={`Operation cost: $ ${selectedOperation.cost}`}
+                variant="outlined"
+              />
+            </Grid>
+          </Grid>
+          {operationItems.map((item) => item)}
+          <Grid container sx={{ mt: 2 }}>
+            <Grid item xs={6}>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="success"
+                onClick={addOperationItem}
+              >
+                + Item
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="error"
+                onClick={removeOperationItem}
+              >
+                - Item
+              </Button>
+            </Grid>
+          </Grid>
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Sign In
+            Send Operation!
           </Button>
-          <Grid container>
-            <Grid item>
-              <Link href="#" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Grid>
-          </Grid>
         </Box>
       </Box>
     </Box>
   );
 };
 
-export default withCookies(LoginForm);
+export default withCookies(OperationForm);

@@ -44,3 +44,32 @@ export const getAuthRequest = async (url: string, token: string) => {
 
   return response;
 };
+
+export const postAuthRequest = async (
+  url: string,
+  token: string,
+  body: any
+) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: token,
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(body),
+    credentials: "omit",
+  })
+    .then((res) => res)
+    .catch((err) => {
+      console.error(err);
+      return err;
+    });
+
+  //   if (response.status == 403) {
+  //     window.location.href = "/login";
+  //   }
+
+  return response;
+};

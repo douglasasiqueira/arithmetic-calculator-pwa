@@ -38,7 +38,7 @@ const OperationPage = ({ cookies }: { cookies: Cookies }) => {
 
   return (
     <AuthSection>
-      <OperationForm operations={operations} />
+      {operations.length > 0 && <OperationForm operations={operations} />}
     </AuthSection>
   );
 };
