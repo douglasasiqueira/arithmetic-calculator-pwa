@@ -38,13 +38,13 @@ const OperationItem = () => {
     <Grid container sx={{ marginTop: 2 }} spacing={1}>
       <Grid item xs={6}>
         <Select
-          value={selectedOperator.operator}
+          value={selectedOperator.id}
           id="demo-simple-select"
           onChange={handleOperationChange}
           sx={{ width: "100%" }}
         >
           {availableOperators.map((operator) => (
-            <MenuItem value={operator.operator} key={operator.operator}>
+            <MenuItem value={operator.id} key={operator.operator}>
               {operator.operator}
             </MenuItem>
           ))}
