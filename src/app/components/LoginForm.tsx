@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import { request } from "../requests";
 import Alert from "@mui/material/Alert";
 import { Cookies, withCookies } from "react-cookie";
-import { API_URL } from "../constants";
+import { API_URL, AUTH_COOKIE, PAGES } from "../constants";
 
 const LoginForm = ({ cookies }: { cookies: Cookies }) => {
   const [error, setError] = useState({ isError: false, message: "" });
@@ -29,9 +29,9 @@ const LoginForm = ({ cookies }: { cookies: Cookies }) => {
       setError({ isError: true, message: "Invalid credentials. Try again." });
     } else {
       const token = await response.text();
-      cookies.set("auth_token", token);
+      cookies.set(AUTH_COOKIE, token);
 
-      window.location.href = "/record";
+      window.location.href = PAGES.record;
     }
   };
 

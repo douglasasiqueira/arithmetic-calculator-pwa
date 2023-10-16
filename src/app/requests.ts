@@ -1,3 +1,5 @@
+import { PAGES } from "./constants";
+
 export const request = async (
   url: string,
   method: string = "GET",
@@ -39,7 +41,7 @@ export const getAuthRequest = async (url: string, token: string) => {
     });
 
   if (response.status == 403) {
-    window.location.href = "/login";
+    window.location.href = PAGES.login;
   }
 
   return response;
@@ -67,9 +69,33 @@ export const postAuthRequest = async (
       return err;
     });
 
-  //   if (response.status == 403) {
-  //     window.location.href = "/login";
-  //   }
+  if (response.status == 403) {
+    window.location.href = PAGES.login;
+  }
+
+  return response;
+};
+
+export const deleteAuthRequest = async (url: string, token: string) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: token,
+  };
+
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: headers,
+    credentials: "omit",
+  })
+    .then((res) => res)
+    .catch((err) => {
+      console.error(err);
+      return err;
+    });
+
+  if (response.status == 403) {
+    window.location.href = PAGES.login;
+  }
 
   return response;
 };

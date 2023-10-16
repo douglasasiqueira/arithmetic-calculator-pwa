@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 import { Cookies, withCookies } from "react-cookie";
-import { getAuthRequest } from "@/app/requests";
+import { deleteAuthRequest, getAuthRequest } from "@/app/requests";
 
 import OrderedTable from "@/app/components/OrderedTable";
 import { Record } from "@/app/types";
 
-import { API_URL } from "@/app/constants";
+import { API_URL, AUTH_COOKIE } from "@/app/constants";
 import Alert from "@mui/material/Alert";
 
 const RecordsTable = ({ cookies }: { cookies: Cookies }) => {
@@ -16,39 +16,54 @@ const RecordsTable = ({ cookies }: { cookies: Cookies }) => {
   const [pageSize, setPageSize] = useState(15);
   const [fetchError, setFetchError] = useState(false);
 
-  useEffect(() => {
-    const getRecords = async () => {
-      setFetchError(false);
+  const deleteItem = async (itemId: string) => {
+    try {
+      const response = await deleteAuthRequest(
+        `${API_URL}/v1/record/${itemId}`,
+        cookies.get(AUTH_COOKIE)
+      );
 
-      try {
-        const response = await getAuthRequest(
-          `${API_URL}/v1/record?page=${page}&size=${pageSize}`,
-          cookies.get("auth_token")
+      if (response.status === 200) {
+        getRecords(page, pageSize);
+      }
+    } catch {
+      setFetchError(true);
+    }
+  };
+
+  const getRecords = async (page: number, pageSize: number) => {
+    setFetchError(false);
+
+    try {
+      const response = await getAuthRequest(
+        `${API_URL}/v1/record?page=${page}&size=${pageSize}`,
+        cookies.get(AUTH_COOKIE)
+      );
+
+      if (response.status > 299) {
+        setFetchError(true);
+      } else {
+        const fetchedRecords = await response.json();
+
+        setRecords(
+          fetchedRecords.map(
+            (fetchedRecord: { operationDTO: { type: any } }) => ({
+              ...fetchedRecord,
+              type: fetchedRecord.operationDTO.type,
+            })
+          )
         );
 
-        if (response.status > 299) {
-          setFetchError(true);
-        } else {
-          const fetchedRecords = await response.json();
-
-          setRecords(
-            fetchedRecords.map(
-              (fetchedRecord: { operationDTO: { type: any } }) => ({
-                ...fetchedRecord,
-                type: fetchedRecord.operationDTO.type,
-              })
-            )
-          );
-
-          setCountRecords(parseInt(response.headers.get("X-total-count")));
-        }
-      } catch {
-        setFetchError(true);
+        setCountRecords(parseInt(response.headers.get("X-total-count")));
       }
-    };
+    } catch {
+      setFetchError(true);
+    }
+  };
 
-    getRecords();
-  }, [cookies, page, pageSize]);
+  useEffect(() => {
+    getRecords(page, pageSize);
+  }, [page, pageSize]);
 
   const orderKeys = [
     { id: "id", value: "ID" },
@@ -79,6 +94,7 @@ const RecordsTable = ({ cookies }: { cookies: Cookies }) => {
       pageSize={pageSize}
       handlePageChange={handlePageChange}
       handlePageSizeChange={handlePageSizeChange}
+      deleteFn={deleteItem}
     />
   ) : (
     <Alert severity="error">

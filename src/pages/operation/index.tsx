@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import AuthSection from "@/app/components/AuthSection";
-import { API_URL } from "@/app/constants";
+import { API_URL, AUTH_COOKIE } from "@/app/constants";
 import { getAuthRequest } from "@/app/requests";
 import { Cookies, withCookies } from "react-cookie";
 import { Operation } from "@/app/types";
@@ -18,7 +18,7 @@ const OperationPage = ({ cookies }: { cookies: Cookies }) => {
       try {
         const response = await getAuthRequest(
           `${API_URL}/v1/operation`,
-          cookies.get("auth_token")
+          cookies.get(AUTH_COOKIE)
         );
 
         if (response.status > 299) {
